@@ -102,19 +102,23 @@ def build_hva_ansatz(N, layers):
     qc = QuantumCircuit(N)
     
     params = ParameterVector("theta", length=3*layers)
-    
+    #print(params.params[0].numeric())
+    #for x in dir(params.params[0]):
+        #print(x)
     for l in range(layers):
         alpha = params[3*l]
         beta  = params[3*l + 1]
         gamma = params[3*l + 2]
         
         # Brick-layer ZZ interactions
-        # Even layer: gates on (0,1), (2,3)
-        # Odd layer: gates on (1,2), (3,4)
-        start = l % 2
-        for i in range(start, N-1, 2):
+        # Even Pairs
+        for i in range(0, N-1, 2):
             qc.rzz(alpha, i, i+1)
-        
+            
+        # Odd Pairs
+        for i in range(1,N-1,2):
+            qc.rzz(alpha, i, i+1)
+            
         # Z rotations
         for i in range(N):
             qc.rz(beta, i)
@@ -122,7 +126,7 @@ def build_hva_ansatz(N, layers):
         # X rotations
         for i in range(N):
             qc.rx(gamma, i)
-    
+        print(qc)
     return qc, params
 
 def run_vqe_fake_backend(N, layers, H, maxiter=100, shots=1024, n_starts = 5):
