@@ -126,7 +126,7 @@ def build_hva_ansatz(N, layers):
         # X rotations
         for i in range(N):
             qc.rx(gamma, i)
-        print(qc)
+        #print(qc)
     return qc, params
 
 def run_vqe_fake_backend(N, layers, H, maxiter=100, shots=1024, n_starts = 5):
