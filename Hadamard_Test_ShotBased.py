@@ -69,9 +69,12 @@ for theta in theta_vals:
     
     qc.measure(anc, 0)
     
-    compiled = transpile(qc, sim)
+    tqc = transpile(qc, sim, optimization_level=3)
 
-    result = sim.run(compiled, shots=shots).result()
+    print("Depth:", tqc.depth())
+    print("CNOTs:", tqc.count_ops().get("cx", 0))
+
+    result = sim.run(tqc, shots=shots).result()
     
     counts = result.get_counts()
     

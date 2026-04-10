@@ -66,8 +66,13 @@ for theta in theta_vals:
     qc_total = qc_init.compose(qc, front=False)
     # print(qc_total)
     # Run sim
-    compiled = transpile(qc_total, sim)
-    result = sim.run(compiled, shots=shots).result()
+    
+    tqc = transpile(qc_total, sim, optimization_level=3)
+
+    print("Depth:", tqc.depth())
+    print("CNOTs:", tqc.count_ops().get("cx", 0))
+    
+    result = sim.run(tqc, shots=shots).result()
     counts = result.get_counts()
     
     p0 = counts.get('0', 0) / shots
