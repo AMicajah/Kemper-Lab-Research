@@ -22,8 +22,8 @@ sz2 = qt.tensor(qt.qeye(2), qt.sigmaz())
 H = Jx*sx1*sx2 + Jy*sy1*sy2 + Jz*sz1*sz2
 #print(H)
 # Jump operators
-L1 = qt.sigmam()           # site 1 decays faster
-L2 = 0.5 * qt.sigmam()     # site 2 decays slower
+L1 = qt.sigmam()           
+L2 = 0.5 * qt.sigmam()     
 c_ops = [qt.tensor(L1, qt.qeye(2)), qt.tensor(qt.qeye(2), L2)]
 #print(c_ops)
 # Initial state (asymmetric)

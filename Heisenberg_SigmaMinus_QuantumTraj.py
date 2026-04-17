@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
 from qiskit.quantum_info import Statevector, SparsePauliOp
 
 # Parameters
@@ -12,7 +11,7 @@ Jz = 0.8
 tlist = np.linspace(0, 10, 200)
 dt = tlist[1] - tlist[0]
 
-n_traj = 1000   # number of trajectories
+n_traj = 2000   # number of trajectories
 
 # Heisenberg Hamiltonian
 def build_heisenberg_hamiltonian(N, Jx, Jy, Jz):
