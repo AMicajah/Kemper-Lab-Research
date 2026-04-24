@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
-from qiskit_aer.noise import NoiseModel, amplitude_damping_error
 
 # Parameters
 N = 2
@@ -13,7 +12,7 @@ Jz = 0.8
 tlist = np.linspace(0, 10, 100)
 dt = tlist[1] - tlist[0]
 
-shots = 2000
+shots = 5000
 
 # Dissipation rates
 gamma1 = 1.0
@@ -48,19 +47,6 @@ def heisenberg_step(qc, Jx, Jy, Jz, dt):
     qc.s(0)
     qc.s(1)
 
-# Noise Model (σ⁻ jumps)
-noise_model = NoiseModel()
-
-p1 = gamma1 * dt
-p2 = gamma2 * dt
-
-error1 = amplitude_damping_error(p1)
-error2 = amplitude_damping_error(p2)
-
-# Apply noise after identity
-noise_model.add_quantum_error(error1, ['id'], [0])
-noise_model.add_quantum_error(error2, ['id'], [1])
-
 
 sim = AerSimulator()
 
@@ -70,39 +56,51 @@ def compute_sz(counts, qubit_index, shots):
     for bitstring, count in counts.items():
         bit = int(bitstring[qubit_index])
         exp += (1 if bit == 0 else -1) * count
-    return - exp / shots
-
-''' I couldn't figure out how to fix the ordering in the above function to make
-the results match the QuTip (everything was inverted over time axis) so I just
-added a minus sign to make them match for now '''
+    return exp / shots
 
 # Time evolution
 sz_exp1 = []
 sz_exp2 = []
-
+def sigma_minus_channel(qc, system, ancilla, gamma, dt):
+    p = gamma * dt
+    theta = 2 * np.arcsin(np.sqrt(p))
+    
+    qc.reset(ancilla)
+    
+    # sigma minus circuit
+    qc.x(system)
+    qc.cry(theta, system, ancilla)
+    qc.x(system)
+    
+    qc.cx(ancilla, system)
+    
+    qc.reset(ancilla)
+    
 for step in range(len(tlist)):
     
-    qc = QuantumCircuit(N, N)
+    qc = QuantumCircuit(N + 2, N)
+    sys0, sys1 = 0, 1
+    anc0, anc1 = 2, 3
     
     # Initial state |10>
-    qc.x(0)
+    qc.x(sys0)
     
     # Apply time evolution
     for _ in range(step):
         heisenberg_step(qc, Jx, Jy, Jz, dt)
     
         # trigger noise
-        qc.id(0)
-        qc.id(1)
+        sigma_minus_channel(qc, sys0, anc0, gamma1, dt)
+        sigma_minus_channel(qc, sys1, anc1, gamma2, dt)
         
-    qc.measure([0, 1], [0, 1])
+    qc.measure([sys0, sys1], [1, 0])
+    
     
     tqc = transpile(qc, sim, optimization_level=0)
     
     result = sim.run(
         tqc,
-        shots=shots,
-        noise_model=noise_model
+        shots=shots
     ).result()
     
     counts = result.get_counts()
